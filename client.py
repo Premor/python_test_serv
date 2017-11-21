@@ -8,7 +8,7 @@ def create_pack(arg):
     s=s.rstrip(",")
     return bytes(s,"utf-8")
 
-HOST, PORT = "localhost", 9999
+HOST, PORT = "diamant-s.ru", 9999
 data = bytes(",".join(sys.argv[1:]),'utf-8')
 #args=('session',1,1)
 #data=create_pack(args)
