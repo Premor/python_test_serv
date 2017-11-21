@@ -40,7 +40,7 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
                 return "cord op,"+str(i.p1.x)+str(i.p1.y)
 
 
-    def game(self,x,y):
+    def move(self,x,y):
         res='wait'
         for i in self.sessions:
             #if (i.p1.state == 'first turn' and i.p1.ip == self.client_address[0]) or (i.p2.state == 'first turn' and i.p2.ip == self.client_address[0]):
@@ -117,9 +117,11 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         if str(data[0].decode('utf-8'))=='session':
             res=self.session_act(int(data[1].decode('utf-8')),int(data[2].decode('utf-8')))
         elif str(data[0].decode('utf-8'))=='move':
-            res=self.game(int(data[1].decode('utf-8')),int(data[2].decode('utf-8')))
+            res=self.move(int(data[1].decode('utf-8')),int(data[2].decode('utf-8')))
         elif str(data[0].decode('utf-8'))=='state':
-            pass
+            res=self.state()
+        elif str(data[0].decode('utf-8'))=='op':
+            res=self.cordinate_oponent()
         
         socket = self.request[1]
         print("{} wrote:".format(self.client_address[0]))
