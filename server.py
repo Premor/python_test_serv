@@ -62,7 +62,7 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
                 i.p2.x+=x
                 i.p2.y+=y
                 i.p2.state='wait'
-                i.p2.state='turn'
+                i.p1.state='turn'
                 res='cordinate,'+str(i.p2.x)+','+str(i.p2.y)+','+i.p2.state
         return res
 
