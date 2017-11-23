@@ -1,3 +1,4 @@
+import time
 import socket
 import threading
 import random
@@ -109,7 +110,6 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         return "state,"+res
 
     def handle(self):
-        
         data = self.request[0].split(b',')
         res="nothing change"
         print(data[0].decode('utf-8'))
