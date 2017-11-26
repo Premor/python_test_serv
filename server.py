@@ -1,14 +1,25 @@
+import time
 import socket
 import threading
 import random
 import socketserver
+
+class unit:
+    def __init__(self):
+        self.initiat=0
+        self.count=1
+        self.hp=10
+        self.damage=5
+    
+class slave(unit):
+    pass
 class player:
     def __init__(self,ip="0",x=0,y=0):
         self.ip=ip
         self.x=x
         self.y=y
         self.state='first turn'
-        
+        self.units=[]
 class session:
     def __init__(self, p1=player(), p2=player()):
         self.p1 = p1
@@ -109,7 +120,6 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         return "state,"+res
 
     def handle(self):
-        
         data = self.request[0].split(b',')
         res="nothing change"
         print(data[0].decode('utf-8'))
