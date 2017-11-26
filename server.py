@@ -35,9 +35,9 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
     def cordinate_oponent(self):
         for i in self.sessions:
             if i.p1.ip == self.client_address[0]:
-                return "cord op,"+str(i.p2.x)+str(i.p2.y)
+                return "cord op,"+str(i.p2.x)+','+str(i.p2.y)
             elif i.p2.ip == self.client_address[0]:
-                return "cord op,"+str(i.p1.x)+str(i.p1.y)
+                return "cord op,"+str(i.p1.x)+','+str(i.p1.y)
 
 
     def move(self,x,y):
