@@ -5,14 +5,25 @@ import random
 import socketserver
 
 class unit:
-    def __init__(self):
+    def __init__(self,count=1,hp=10,damage=5,move=3,range_=1,x=0,y=0):
         self.initiat=0
-        self.count=1
-        self.hp=10
-        self.damage=5
+        self.count=count
+        self.hp=hp
+        self.damage=damage
+        self.move=move
+        self.range=range_
+        self.x=x
+        self.y=y
+        
     
 class slave(unit):
-    pass
+    def __init__(self,count=1,x=0,y=0):
+        super.__init__(count,15,3,3,1,x,y)
+class archer(unit):
+    def __init__(self,count=1,x=0,y=0):
+        super.__init__(count,5,7,2,4,x,y)
+
+
 class player:
     def __init__(self,ip="0",x=0,y=0):
         self.ip=ip
@@ -46,9 +57,12 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
     def cordinate_oponent(self):
         for i in self.sessions:
             if i.p1.ip == self.client_address[0]:
-                return "cord op,"+str(i.p2.x)+str(i.p2.y)
+                return "cord op,"+str(i.p2.x)+','+str(i.p2.y)
             elif i.p2.ip == self.client_address[0]:
-                return "cord op,"+str(i.p1.x)+str(i.p1.y)
+                return "cord op,"+str(i.p1.x)+','+str(i.p1.y)
+
+
+
 
 
     def move(self,x,y):
@@ -77,26 +91,37 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
                 res='cordinate,'+str(i.p2.x)+','+str(i.p2.y)+','+i.p2.state
         return res
 
-    def session_act(self,x,y):
+    def session_act(self,units):
         k=0
         for i in self.sessions:
             if i.p1.ip=='0':
                 i.p1.ip=self.client_address[0]
-                i.p1.x=x
-                i.p1.y=y
+                i.p1.x=0
+                i.p1.y=0
+                for j in units:
+                    i.p1.units.append(eval("{0}({1})".format(j[0],j[1])))
                 k=1
                 res='wait opponent'
                 break   
             elif i.p2.ip=='0':
                 i.p2.ip=self.client_address[0]
-                i.p2.x=x
-                i.p2.y=y
+                i.p2.x=10
+                i.p2.y=10
                 k=1
+                for j in units:
+                    i.p2.units.append(eval("{0}({1})".format(j[0],j[1])))
                 res='finded opponent'
                 i.state="game"
                 break
         if k==0:
-            self.sessions.append(session(player(self.client_address[0],x,y),player()))
+            self.sessions.append(session(player(),player()))
+            i=self.sessions[self.sessions.__len__()-1]
+            i.p1.ip=self.client_address[0]
+            i.p1.x=0
+            i.p1.y=0
+            for j in units:
+                    i.p1.units.append(eval("{0}({1})".format(j[0],j[1])))
+            k=1
             res='wait opponent'
         return  res+' '+str(self.sessions.__len__())+' '+str(self.sessions[self.sessions.__len__()-1].p1.ip)+' '+str(self.sessions[self.sessions.__len__()-1].p2.ip)
 
@@ -120,12 +145,12 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         return "state,"+res
 
     def handle(self):
-        data = self.request[0].split(b',')
+        data = self.request[0].split(b';')
         res="nothing change"
         print(data[0].decode('utf-8'))
 
         if str(data[0].decode('utf-8'))=='session':
-            res=self.session_act(int(data[1].decode('utf-8')),int(data[2].decode('utf-8')))
+            res=self.session_act(parse_list(data[1].decode('utf-8')))
         elif str(data[0].decode('utf-8'))=='move':
             res=self.move(int(data[1].decode('utf-8')),int(data[2].decode('utf-8')))
         elif str(data[0].decode('utf-8'))=='state':
@@ -137,6 +162,20 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         print("{} wrote:".format(self.client_address[0]))
         
         socket.sendto(bytes(res,"utf-8"), self.client_address)
+
+
+
+
+def parse_list(arg):
+    args=arg.split(';')
+    res=[]
+    for i in args:
+        buf=i.split(':')
+        buf2=[]
+        for j in buf:
+            buf2.append(j)
+        res.append(buf2)
+    return res
 
 if __name__ == "__main__":
     HOST, PORT = "diamant-s.ru", 9999
