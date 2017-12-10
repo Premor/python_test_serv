@@ -5,7 +5,7 @@ import random
 import socketserver
 
 class unit:
-    def __init__(self,count=1,hp=10,damage=5,move=3,range_=1,x=0,y=0):
+    def __init__(self,count=1,x=0,y=0,hp=10,damage=5,move=3,range_=1):
         self.initiat=0
         self.count=count
         self.hp=hp
@@ -18,10 +18,10 @@ class unit:
     
 class slave(unit):
     def __init__(self,count=1,x=0,y=0):
-        super.__init__(count,15,3,3,1,x,y)
+        super().__init__(count,x,y,15,3,3,1)
 class archer(unit):
     def __init__(self,count=1,x=0,y=0):
-        super.__init__(count,5,7,2,4,x,y)
+        super().__init__(count,x,y,5,7,2,4)
 
 
 class player:
