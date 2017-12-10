@@ -8,14 +8,14 @@ class client:
     def create_pack(self,arg):
         s=""
         for i in arg:
-            s+=str(i)+","
-        s=s.rstrip(",")
+            s+=str(i)+";"
+        s=s.rstrip(";")
         return bytes(s,"utf-8")
 
     def session_act(self,event):
         
         #data = bytes(";".join(sys.argv[1:]),'utf-8')
-        args=('session',"slave:333;archer:50")
+        args=('session',"slave:333,archer:50")
         data=self.create_pack(args)
         #data=bytes()
     # SOCK_DGRAM is the socket type to use for UDP sockets

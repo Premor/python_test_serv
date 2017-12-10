@@ -167,7 +167,7 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
 
 
 def parse_list(arg):
-    args=arg.split(';')
+    args=arg.split(',')
     res=[]
     for i in args:
         buf=i.split(':')
