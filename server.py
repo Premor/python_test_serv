@@ -31,6 +31,14 @@ class player:
         self.y=y
         self.state='first turn'
         self.units=[]
+    def apllay_move(self,s):
+        i=0
+        while i<len(s):
+            self.units[i].x= s[i][0]
+            self.units[i].y= s[i][1]
+            i+=1
+
+
 class session:
     def __init__(self, p1=player(), p2=player()):
         self.p1 = p1
@@ -63,32 +71,24 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
 
 
 
+    def move_phase(self):
+        pass
 
-
-    def move(self,x,y):
+    def move(self,coord):
         res='wait'
         for i in self.sessions:
-            #if (i.p1.state == 'first turn' and i.p1.ip == self.client_address[0]) or (i.p2.state == 'first turn' and i.p2.ip == self.client_address[0]):
-            #    if random.random()>=0 and random.random()<0.5:
-            #        i.p1.state='turn'
-            #        i.p2.state='wait'
-            #    else:
-            #        i.p2.state='turn'
-            #        i.p1.state='wait'
-            #    return 
-
             if i.p1.state == 'turn' and i.p1.ip == self.client_address[0]:
-                i.p1.x+=x
-                i.p1.y+=y
+                p1.apllay_move(coord)
                 i.p1.state='wait'
-                i.p2.state='turn'
                 res='cordinate,'+str(i.p1.x)+','+str(i.p1.y)+','+i.p1.state
             elif i.p2.state == 'turn' and i.p2.ip == self.client_address[0]:
-                i.p2.x+=x
-                i.p2.y+=y
+                p1.apllay_move(coord)
                 i.p2.state='wait'
-                i.p1.state='turn'
                 res='cordinate,'+str(i.p2.x)+','+str(i.p2.y)+','+i.p2.state
+            if i.p1.state = 'wait' and i.p2.state = 'wait': 
+                self.move_phase()
+                i.p1.state = 'turn'
+                i.p2.state = 'turn'
         return res
 
     def session_act(self,units):
@@ -129,12 +129,14 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         for i in self.sessions:
             res="error"
             if (i.p1.state == 'first turn' and i.p1.ip == self.client_address[0]) or (i.p2.state == 'first turn' and i.p2.ip == self.client_address[0]):
-                if random.random()>=0 and random.random()<0.5:
-                    i.p1.state='turn'
-                    i.p2.state='wait'
-                else:
-                    i.p2.state='turn'
-                    i.p1.state='wait'
+                #if random.random()>=0 and random.random()<0.5:
+                #    i.p1.state='turn'
+                #    i.p2.state='wait'
+                #else:
+                #    i.p2.state='turn'
+                #    i.p1.state='wait'
+                i.p1.state='turn'
+                i.p2.state='turn'
 
             if i.p1.ip == self.client_address[0]:
                 res=i.p1.state
@@ -152,7 +154,7 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         if str(data[0].decode('utf-8'))=='session':
             res=self.session_act(parse_list(data[1].decode('utf-8')))
         elif str(data[0].decode('utf-8'))=='move':
-            res=self.move(int(data[1].decode('utf-8')),int(data[2].decode('utf-8')))
+            res=self.move(parse_list(data[1].decode('utf-8')))
         elif str(data[0].decode('utf-8'))=='state':
             res=self.state()
         elif str(data[0].decode('utf-8'))=='op':
