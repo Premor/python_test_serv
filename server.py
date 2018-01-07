@@ -85,7 +85,7 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
                 p1.apllay_move(coord)
                 i.p2.state='wait'
                 res='cordinate,'+str(i.p2.x)+','+str(i.p2.y)+','+i.p2.state
-            if i.p1.state = 'wait' and i.p2.state = 'wait': 
+            if i.p1.state == 'wait' and i.p2.state == 'wait': 
                 self.move_phase()
                 i.p1.state = 'turn'
                 i.p2.state = 'turn'
