@@ -14,6 +14,7 @@ class unit:
         self.range=range_
         self.x=x
         self.y=y
+        self.udalennost=0 #удаленность от центра 
         
     
 class slave(unit):
@@ -31,6 +32,7 @@ class player:
         self.y=y
         self.state='first turn'
         self.units=[]
+        self.path=[]
     def apllay_move(self,s):
         i=0
         while i<len(s):
@@ -62,7 +64,7 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
     """
     sessions=[session()]
     
-    def cordinate_oponent(self):
+    def coordinate_opponent(self):
         for i in self.sessions:
             if i.p1.ip == self.client_address[0]:
                 return "cord op,"+str(i.p2.x)+','+str(i.p2.y)
@@ -70,23 +72,70 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
                 return "cord op,"+str(i.p1.x)+','+str(i.p1.y)
 
 
+    def max_move(self,ses):
+        t=[]
+        for i in range(0,len(ses.p1.units)):
+            t.append(ses.p1.units[i].move)
+        for i in range(0,len(ses.p2.units)):
+            t.append(ses.p2.units[i].move)
+        return max(t)
+    def move_phase(self,ses):
+        for i in range(0,len(ses.p1.units)):
+            ses.p1.units[i].rem_move=ses.p1.units[i].move
+            ses.p1.units[i].udalennost=0
+        for i in range(0,len(ses.p2.units)):
+            ses.p2.units[i].rem_move=ses.p2.units[i].move
+            ses.p2.units[i].udalennost=0
+        #глобальный цикл по скорости
+        for i in range(0,self.max_move(ses)):
+            for j in range(0,len(ses.p1.units)):
+                if ses.p1.units[j].x!=ses.p1.path[0][0] and ses.p1.units[j].y!=ses.p1.path[0][1] and ses.p1.units[j].rem_move>0:
+                    if ses.p1.units[j].udalennost <2:
+                        ses.p1.units[j].udalennost+=1
+                    else:
+                        ses.p1.units[j].x=ses.p1.path[0][0]
+                        ses.p1.units[j].y=ses.p1.path[0][1]
+                    ses.p1.units[j].rem_move-=1
+                elif ses.p1.units[j].x==ses.p1.path[0][0] and ses.p1.units[j].y==ses.p1.path[0][1] and ses.p1.units[j].rem_move>0:
+                    if ses.p1.units[j].udalennost >0:
+                        ses.p1.units[j].udalennost-=1
+                    else:
+                        ses.p1.path.pop(0) #WARNING вроде помню что это дерьмо когда-то не работало, если будут проблемы заменить
+                        ses.p1.units[j].udalennost+=1
+                    ses.p1.units[j].rem_move-=1
 
-    def move_phase(self):
-        pass
+            for j in range(0,len(ses.p2.units)):
+                if ses.p2.units[j].x!=ses.p2.path[0][0] and ses.p2.units[j].y!=ses.p2.path[0][1] and ses.p2.units[j].rem_move>0:
+                    if ses.p2.units[j].udalennost <2:
+                        ses.p2.units[j].udalennost+=1
+                    else:
+                        ses.p2.units[j].x=ses.p2.path[0][0]
+                        ses.p2.units[j].y=ses.p2.path[0][1]
+                    ses.p2.units[j].rem_move-=1
+                elif ses.p2.units[j].x==ses.p2.path[0][0] and ses.p2.units[j].y==ses.p2.path[0][1] and ses.p2.units[j].rem_move>0:
+                    if ses.p2.units[j].udalennost >0:
+                        ses.p2.units[j].udalennost-=1
+                    else:
+                        ses.p2.path.pop(0) #WARNING вроде помню что это дерьмо когда-то не работало, если будут проблемы заменить
+                        ses.p2.units[j].udalennost+=1
+                    ses.p2.units[j].rem_move-=1
+            #нужны проверки на встречу
 
     def move(self,coord):
         res='wait'
         for i in self.sessions:
             if i.p1.state == 'turn' and i.p1.ip == self.client_address[0]:
-                p1.apllay_move(coord)
+                #p1.apllay_move(coord)
+                p1.path=coord
                 i.p1.state='wait'
-                res='cordinate,'+str(i.p1.x)+','+str(i.p1.y)+','+i.p1.state
+                res='state,'+i.p1.state
             elif i.p2.state == 'turn' and i.p2.ip == self.client_address[0]:
-                p1.apllay_move(coord)
+                #p1.apllay_move(coord)
+                p1.path=coord
                 i.p2.state='wait'
-                res='cordinate,'+str(i.p2.x)+','+str(i.p2.y)+','+i.p2.state
+                res='state,'+i.p2.state
             if i.p1.state == 'wait' and i.p2.state == 'wait': 
-                self.move_phase()
+                self.move_phase(i)
                 i.p1.state = 'turn'
                 i.p2.state = 'turn'
         return res
@@ -154,11 +203,14 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         if str(data[0].decode('utf-8'))=='session':
             res=self.session_act(parse_list(data[1].decode('utf-8')))
         elif str(data[0].decode('utf-8'))=='move':
-            res=self.move(parse_list(data[1].decode('utf-8')))
+            format_data=[]
+            for i in range(1,len(data)):
+                format_data.append(parse_list(data[i].decode('utf-8')))
+            res=self.move(format_data)
         elif str(data[0].decode('utf-8'))=='state':
             res=self.state()
         elif str(data[0].decode('utf-8'))=='op':
-            res=self.cordinate_oponent()
+            res=self.coordinate_opponent()
         
         socket = self.request[1]
         print("{} wrote:".format(self.client_address[0]))
