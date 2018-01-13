@@ -6,13 +6,25 @@ import tkinter
 
 class client:
     class cell:
-        def __init__(self,state='open')
+        def __init__(self,state='open'):
             self.state=state
     maps=[]
     adj=[]
     HOST = "diamant-s.ru"  
     PORT = 9999
     state=""
+
+    def parse_list(arg):
+        args=arg.split(',')
+        res=[]
+        for i in args:
+            buf=i.split(':')
+            buf2=[]
+            for j in buf:
+                buf2.append(j)
+            res.append(buf2)
+        return res
+    
     def create_pack(self,arg):
         s=""
         for i in arg:
@@ -50,8 +62,16 @@ class client:
                 if j-1 in range(0,8):
                     self.adj[i][j].append([i,j-1])
 
-                if i-1 in range(0,8) and i%2==0:
-                    self.adj[i][j].append()
+               
+
+
+    def apllay(self,event):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        sock.sendto(bytes(self.text.get('1.0',END)), (self.HOST, self.PORT))
+        received = str(sock.recv(1024), "utf-8")
+        self.state['text']=received      
+
 
     def session_act(self,event):
                 
@@ -71,14 +91,30 @@ class client:
         self.map_generate()
         root = tkinter.Tk()
         image = tkinter.PhotoImage(file='./setka.png')
+        point = tkinter.PhotoImage(file='./point.png')
         btn = tkinter.Button(root,text="Click me",width=30,height=5)
+        btn2 = tkinter.Button(root,text="apllay command",width=30,height=5)
         lab= tkinter.Label(root,text="state")
+        text= tkinter.Text(root)
         lab2= tkinter.Label(root,image=image)
+        lab3=tkinter.Label(root,image=point)
+        #25 30
+        #71 
+        #35 60
+        
+        lab3.place(x=60,y=90)
+
         lab2.pack()
+        
         self.state=lab
+        self.text=text
         lab.pack()
         btn.bind("<Button-1>",self.session_act)
+        btn.bind("<Button-1>",self.apllay)
         btn.pack()
+        btn2.pack()
+        text.pack()
+        
         root.mainloop()
 
 

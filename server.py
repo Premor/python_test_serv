@@ -8,21 +8,24 @@ class unit:
     def __init__(self,count=1,x=0,y=0,hp=10,damage=5,move=3,range_=1):
         self.initiat=0
         self.count=count
-        self.hp=hp
+        self.max_hp=hp
+        self.current_hp=hp
         self.damage=damage
         self.move=move
         self.range=range_
         self.x=x
         self.y=y
+        self.mode='attack'
         self.udalennost=0 #удаленность от центра 
+        self.last_cell=[]
         
     
 class slave(unit):
     def __init__(self,count=1,x=0,y=0):
-        super().__init__(count,x,y,15,3,3,1)
+        super().__init__(count,x,y,15,3,8,1)
 class archer(unit):
     def __init__(self,count=1,x=0,y=0):
-        super().__init__(count,x,y,5,7,2,4)
+        super().__init__(count,x,y,5,7,4,4)
 
 
 class player:
@@ -65,11 +68,18 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
     sessions=[session()]
     
     def coordinate_opponent(self):
+        res=''
         for i in self.sessions:
             if i.p1.ip == self.client_address[0]:
-                return "cord op,"+str(i.p2.x)+','+str(i.p2.y)
+                arg=[]
+                for j in i.p1.units:
+                    arg.append([j.x,j.y])
+                return "coord_op;"+list_pack(arg)
             elif i.p2.ip == self.client_address[0]:
-                return "cord op,"+str(i.p1.x)+','+str(i.p1.y)
+                arg=[]
+                for j in i.p2.units:
+                    arg.append([j.x,j.y])
+                return "coord_op;"+list_pack(arg)
 
 
     def max_move(self,ses):
@@ -83,43 +93,76 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         for i in range(0,len(ses.p1.units)):
             ses.p1.units[i].rem_move=ses.p1.units[i].move
             ses.p1.units[i].udalennost=0
+            ses.p1.units[i].last_cell=[ses.p1.units[i].x,ses.p1.units[i].y]
         for i in range(0,len(ses.p2.units)):
             ses.p2.units[i].rem_move=ses.p2.units[i].move
+            ses.p2.units[i].last_cell=[ses.p2.units[i].x,ses.p2.units[i].y]
             ses.p2.units[i].udalennost=0
         #глобальный цикл по скорости
         for i in range(0,self.max_move(ses)):
             for j in range(0,len(ses.p1.units)):
-                if ses.p1.units[j].x!=ses.p1.path[0][0] and ses.p1.units[j].y!=ses.p1.path[0][1] and ses.p1.units[j].rem_move>0:
+                if ses.p1.path!=[] and ses.p1.units[j].x!=ses.p1.path[0][0] and ses.p1.units[j].y!=ses.p1.path[0][1] and ses.p1.units[j].rem_move>0:
                     if ses.p1.units[j].udalennost <2:
                         ses.p1.units[j].udalennost+=1
                     else:
                         ses.p1.units[j].x=ses.p1.path[0][0]
                         ses.p1.units[j].y=ses.p1.path[0][1]
                     ses.p1.units[j].rem_move-=1
-                elif ses.p1.units[j].x==ses.p1.path[0][0] and ses.p1.units[j].y==ses.p1.path[0][1] and ses.p1.units[j].rem_move>0:
+                elif ses.p1.path!=[] and ses.p1.units[j].x==ses.p1.path[0][0] and ses.p1.units[j].y==ses.p1.path[0][1] and ses.p1.units[j].rem_move>0:
                     if ses.p1.units[j].udalennost >0:
                         ses.p1.units[j].udalennost-=1
+                        if ses.p1.units[j].udalennost==0:
+                            ses.p1.units[j].last_cell=[ses.p1.units[j].x,ses.p1.units[j].y]
                     else:
                         ses.p1.path.pop(0) #WARNING вроде помню что это дерьмо когда-то не работало, если будут проблемы заменить
                         ses.p1.units[j].udalennost+=1
                     ses.p1.units[j].rem_move-=1
 
             for j in range(0,len(ses.p2.units)):
-                if ses.p2.units[j].x!=ses.p2.path[0][0] and ses.p2.units[j].y!=ses.p2.path[0][1] and ses.p2.units[j].rem_move>0:
+                if ses.p2.path!=[] and ses.p2.units[j].x!=ses.p2.path[0][0] and ses.p2.units[j].y!=ses.p2.path[0][1] and ses.p2.units[j].rem_move>0:
                     if ses.p2.units[j].udalennost <2:
                         ses.p2.units[j].udalennost+=1
                     else:
                         ses.p2.units[j].x=ses.p2.path[0][0]
                         ses.p2.units[j].y=ses.p2.path[0][1]
                     ses.p2.units[j].rem_move-=1
-                elif ses.p2.units[j].x==ses.p2.path[0][0] and ses.p2.units[j].y==ses.p2.path[0][1] and ses.p2.units[j].rem_move>0:
+                elif ses.p2.path!=[] and ses.p2.units[j].x==ses.p2.path[0][0] and ses.p2.units[j].y==ses.p2.path[0][1] and ses.p2.units[j].rem_move>0:
                     if ses.p2.units[j].udalennost >0:
                         ses.p2.units[j].udalennost-=1
+                        if ses.p2.units[j].udalennost==0:
+                            ses.p2.units[j].last_cell=[ses.p2.units[j].x,ses.p2.units[j].y]
                     else:
                         ses.p2.path.pop(0) #WARNING вроде помню что это дерьмо когда-то не работало, если будут проблемы заменить
                         ses.p2.units[j].udalennost+=1
                     ses.p2.units[j].rem_move-=1
             #нужны проверки на встречу
+            for j in ses.p1.units:
+                for l in ses.p2.units:
+                    if j.x == l.x and j.y == l.y:
+                        total_hp_1=j.max_hp*j.count
+                        total_hp_2=l.max_hp*l.count
+                        total_dmg_1=j.damage*j.count
+                        total_dmg_2=l.damage*l.count
+                        total_hp_1-=total_dmg_2
+                        total_hp_2-=total_dmg_1
+                        if total_hp_1<=0:
+                            j.state='dead'
+                        else:
+                            j.count=total_hp_1//j.max_hp
+                            j.current_hp=total_hp_1%j.max_hp
+                            j.x=j.last_cell[0]
+                            j.y=j.last_cell[1]
+                            ses.p1.path=[]
+                        if total_hp_2<=0:
+                            l.state='dead'
+                        else:
+                            l.count=total_hp_2//l.max_hp
+                            l.current_hp=total_hp_2%l.max_hp
+                            l.x=l.last_cell[0]
+                            l.y=l.last_cell[1]
+                            ses.p2.path=[]
+                        
+
 
     def move(self,coord):
         res='wait'
@@ -218,7 +261,19 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
         socket.sendto(bytes(res,"utf-8"), self.client_address)
 
 
+def create_pack(arg):
+    s=""
+    for i in arg:
+        s+=str(i)+";"
+    s=s.rstrip(";")
+    return s
 
+def list_pack(l):
+    res=''
+    for i in l:
+        res+=i[0]+':'+i[1]+','
+    res=res.rstrip(",")
+    return res
 
 def parse_list(arg):
     args=arg.split(',')
