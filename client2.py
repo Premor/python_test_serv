@@ -86,7 +86,8 @@ r2=sqrt(3)*r/2
 re=pygame.Rect(hexg[4][0],hexg[4][1],abs(hexg[1][0]-hexg[2][0]),abs(hexg[2][1]-hexg[4][1]))
 re2=pygame.Rect(hexg[5][0],hexg[5][1]+r2/2,r/4,r2)
 re3=pygame.Rect(hexg[4][0],hexg[4][1]+r2/2,-r/4,r2)
-selected_cell=[0,0]
+selected_cell=[-1,-1]
+hower_cell=[-1,-1]
 cell_sellected=False
 print(hexg)
 print(re.topleft, re.bottomleft, re.topright, re.bottomright)
@@ -108,19 +109,34 @@ while 1:
     for event in pygame.event.get():
         if event.type in (pygame.QUIT, pygame.KEYDOWN):
             sys.exit()
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type in (pygame.MOUSEBUTTONDOWN,pygame.MOUSEMOTION):
             for i in range(0,len(maps)):
                 for j in range(0,len(maps[i])):
                     for rec in maps[i][j].rect_list:
                         if rec.collidepoint(pygame.mouse.get_pos()):
-                            if selected_cell!=[i,j]:
-                                pygame.draw.polygon(screen,pygame.Color(0,0,255,255),maps[i][j].list_points,0)
-                                pygame.draw.polygon(screen,pygame.Color(255,255,255,255),maps[selected_cell[0]][selected_cell[1]].list_points,0)
-                                pygame.draw.polygon(screen,pygame.Color(0,0,0,255),maps[selected_cell[0]][selected_cell[1]].list_points,1)
-                                selected_cell=[i,j]
-                                cell_sellected=True
-                                update_list.append(screen.get_rect())
-                                break
+                            if event.type != pygame.MOUSEBUTTONDOWN and pygame.MOUSEMOTION:
+                                if hower_cell!=[i,j]:
+                                    if [i,j] !=selected_cell:
+                                        pygame.draw.polygon(screen,pygame.Color(255,255,255,255),maps[i][j].list_points,0)
+                                        pygame.draw.polygon(screen,pygame.Color(0,255,255,255),maps[i][j].list_points,0)
+                                    if selected_cell !=hower_cell:
+                                        pygame.draw.polygon(screen,pygame.Color(255,255,255,255),maps[hower_cell[0]][hower_cell[1]].list_points,0)
+                                        pygame.draw.polygon(screen,pygame.Color(0,0,0,255),maps[hower_cell[0]][hower_cell[1]].list_points,1)
+                                    hower_cell=[i,j]
+                                    cell_sellected=True
+                                    update_list.append(screen.get_rect())
+                                    break
+                            
+                            if event.type == pygame.MOUSEBUTTONDOWN:
+                                if selected_cell!=[i,j]:
+                                    pygame.draw.polygon(screen,pygame.Color(0,0,255,255),maps[i][j].list_points,0)
+                                    pygame.draw.polygon(screen,pygame.Color(255,255,255,255),maps[selected_cell[0]][selected_cell[1]].list_points,0)
+                                    pygame.draw.polygon(screen,pygame.Color(0,0,0,255),maps[selected_cell[0]][selected_cell[1]].list_points,1)
+                                    selected_cell=[i,j]
+                                    cell_sellected=True
+                                    update_list.append(screen.get_rect())
+                                    break
+                            
                     if cell_sellected==True:
                         break
                 if cell_sellected==True:
